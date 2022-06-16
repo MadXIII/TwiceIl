@@ -22,7 +22,7 @@ func main() {
 
 	serv := new(handler.Server)
 
-	if err := serv.Run(":8282", handlers); err != nil {
+	if err := serv.Run(":8383", handlers); err != nil {
 		log.Fatalf("error occured while running server: %s", err.Error())
 	}
 }

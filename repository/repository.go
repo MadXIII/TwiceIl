@@ -1,13 +1,18 @@
 package repository
 
-import "github.com/boltdb/bolt"
+import (
+	"bytes"
+
+	"github.com/boltdb/bolt"
+	b "github.com/madxiii/twiceil/repository/bolt"
+)
 
 type Repository struct {
 	CRUD
 }
 
 type CRUD interface {
-	Create()
+	Created(bytes *bytes.Buffer) (int, error)
 	// Update()
 	// Delete()
 	// Find()
@@ -15,6 +20,6 @@ type CRUD interface {
 
 func New(db *bolt.DB) *Repository {
 	return &Repository{
-		CRUD: bolt.NewProduct(db),
+		CRUD: b.NewProduct(db),
 	}
 }

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 )
@@ -17,5 +18,6 @@ func (s *Server) Run(address string, handlers http.Handler) error {
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
 	}
+	fmt.Println("Should fix logger", address)
 	return s.server.ListenAndServe()
 }
