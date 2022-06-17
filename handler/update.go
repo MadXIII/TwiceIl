@@ -17,6 +17,15 @@ func (h *Handler) Update(c *gin.Context) {
 		return
 	}
 
+	status, err := h.service.ToUpdate(&body)
+	if err != nil {
+		c.JSON(status, gin.H{
+			"status": "failure",
+			"error":  err.Error(),
+		})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"status": "success",
 	})

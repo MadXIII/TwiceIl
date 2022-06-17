@@ -8,11 +8,20 @@ import (
 )
 
 func (h *Handler) Delete(c *gin.Context) {
-	var body model.Product
+	var body model.Delete
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"status": "failure",
 			"error":  "invalid body",
+		})
+		return
+	}
+
+	status, err := h.service.ToDelete(body.Id)
+	if err != nil {
+		c.JSON(status, gin.H{
+			"status": "failure",
+			"error":  err.Error(),
 		})
 		return
 	}

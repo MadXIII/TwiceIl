@@ -11,6 +11,10 @@ type Service struct {
 
 type Checker interface {
 	ToCreate(product *model.Product) (int, int, error)
+	ToUpdate(product *model.Product) (int, error)
+	ToDelete(id int) (int, error)
+	ToFind(name string) (model.Product, int, error)
+	ToGet()
 }
 
 func New(repo *repository.Repository) *Service {

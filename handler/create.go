@@ -18,7 +18,7 @@ func (h *Handler) Create(c *gin.Context) {
 		})
 		return
 	}
-	// service
+
 	id, status, err := h.service.ToCreate(&body)
 	if err != nil {
 		c.JSON(status, gin.H{

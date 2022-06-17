@@ -23,7 +23,7 @@ func (h *Handler) Routes() http.Handler {
 	cmd := route.Group("/cmd")
 	{
 		cmd.POST("/add-product", h.Create)
-		cmd.PATCH("/edit-product", h.Update)
+		cmd.PUT("/edit-product", h.Update)
 		cmd.DELETE("/delete-product", h.Delete)
 	}
 	route.POST("/q/product-search-by-name", h.Find)
