@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -11,7 +10,6 @@ import (
 func (h *Handler) Create(c *gin.Context) {
 	var body model.Product
 	if err := c.ShouldBindJSON(&body); err != nil {
-		fmt.Println(err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"status": "failure",
 			"error":  "invalid body",

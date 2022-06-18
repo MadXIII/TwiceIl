@@ -11,7 +11,9 @@ type Repository struct {
 }
 
 type CRUD interface {
+	Prepare(bucket string, name string) error
 	Save(bucket string, product *model.Product) (int, error)
+	Commit(bucket string, name string, id int) error
 	Edit(bucket string, product *model.Product) error
 	Delete(bucket string, id int) error
 	// Find()
