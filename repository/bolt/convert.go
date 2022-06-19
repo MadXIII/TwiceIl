@@ -22,19 +22,26 @@ func decodeProd(b []byte) model.Product {
 	return product
 }
 
-func encodeName(name string) (*bytes.Buffer, error) {
-	var buff bytes.Buffer
-	enc := gob.NewEncoder(&buff)
-	err := enc.Encode(name)
-	return &buff, err
+func decodeKey(b []byte) string {
+	var product string
+	dec := gob.NewDecoder(bytes.NewBuffer(b))
+	dec.Decode(&product)
+	return product
 }
 
-func encodeId(id int) (*bytes.Buffer, error) {
-	var buff bytes.Buffer
-	enc := gob.NewEncoder(&buff)
-	err := enc.Encode(id)
-	return &buff, err
+func decodeVal(b []byte) int {
+	var product int
+	dec := gob.NewDecoder(bytes.NewBuffer(b))
+	dec.Decode(&product)
+	return product
 }
+
+// func encodeId(id int) (*bytes.Buffer, error) {
+// 	var buff bytes.Buffer
+// 	enc := gob.NewEncoder(&buff)
+// 	err := enc.Encode(id)
+// 	return &buff, err
+// }
 
 func decodeId(b []byte) int {
 	var id int

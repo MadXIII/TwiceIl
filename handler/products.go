@@ -7,18 +7,16 @@ import (
 )
 
 func (h *Handler) Products(c *gin.Context) {
-	// var body model.Product
-	// if err := c.ShouldBindJSON(&body); err != nil {
-	// 	fmt.Println(err)
-	// 	c.JSON(http.StatusBadRequest, gin.H{
-	// 		"status": "failure",
-	// 		"error":  "invalid body",
-	// 	})
-	// 	return
-	// }
-	h.service.ToGet()
+	products, status, err := h.service.ToGet()
+	if err != nil {
+		c.JSON(status, gin.H{
+			"status": "failure",
+			"error":  err.Error(),
+		})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"product": 1,
+		"product": products,
 	})
 }
