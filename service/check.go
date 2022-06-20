@@ -2,6 +2,7 @@ package service
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/madxiii/twiceil/model"
 	"github.com/madxiii/twiceil/repository"
@@ -20,20 +21,28 @@ func (c *Check) ToCreate(product *model.Product) (int, int, error) {
 		return 0, http.StatusBadRequest, ErrPrice
 	}
 
-	if err := c.repo.Prepare(product.Name); err != nil {
-		return 0, http.StatusBadRequest, ErrName
-	}
-
 	id, err := c.repo.Save(product)
 	if err != nil {
 		return 0, http.StatusInternalServerError, err
 	}
 
-	if err = c.repo.Commit(product.Name, id); err != nil {
-		return 0, http.StatusInternalServerError, err
+	return id, 0, err
+}
+
+func (c *Check) ToProduct(param string) (model.Product, int, error) {
+	var product model.Product
+
+	id, err := strconv.Atoi(param)
+	if err != nil {
+		return product, http.StatusBadRequest, ErrId
 	}
 
-	return id, 0, err
+	product, err = c.repo.Product(id)
+	if err != nil {
+		return product, http.StatusInternalServerError, err
+	}
+
+	return product, 0, nil
 }
 
 func (c *Check) ToUpdate(product *model.Product) (int, error) {
@@ -60,14 +69,18 @@ func (c *Check) ToDelete(id int) (int, error) {
 	return 0, nil
 }
 
-func (c *Check) ToFind(name string) (model.Product, int, error) {
+func (c *Check) ToFind(name string) (model.Product, error) {
 	var product model.Product
-	status := 0
+	if len(name) == 0 {
+		return product, ErrEmpty
+	}
 
-	return product, status, nil
+	product, err := c.repo.Find(name)
+
+	return product, err
 }
 
-func (c *Check) ToGet() ([]model.Product, int, error) {
+func (c *Check) ToProducts() ([]model.Product, int, error) {
 	products, err := c.repo.Products()
 
 	return products, http.StatusInternalServerError, err

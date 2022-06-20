@@ -11,12 +11,11 @@ type Repository struct {
 }
 
 type CRUD interface {
-	Prepare(name string) error
 	Save(product *model.Product) (int, error)
-	Commit(name string, id int) error
 	Edit(product *model.Product) error
 	Delete(id int) error
-	// Find()
+	Product(id int) (model.Product, error)
+	Find(name string) (model.Product, error)
 	Products() ([]model.Product, error)
 }
 

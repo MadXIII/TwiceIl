@@ -20,6 +20,12 @@ func (h *Handler) Routes() http.Handler {
 
 	route.GET("/products", h.Products)
 
+	product := route.Group("/product")
+	{
+		product.GET("/add", h.ParseCreate)
+		product.GET("/edit/:id", h.ParseUpdate)
+	}
+
 	cmd := route.Group("/cmd")
 	{
 		cmd.POST("/add-product", h.Create)

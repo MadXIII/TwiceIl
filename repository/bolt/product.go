@@ -1,17 +1,10 @@
 package bolt
 
 import (
-	"errors"
-	"fmt"
+	"bytes"
 
 	"github.com/boltdb/bolt"
 	"github.com/madxiii/twiceil/model"
-)
-
-var (
-	proBucket  string = "Products"
-	nameBucket string = "Names"
-	errUniq    error  = errors.New("not uniq")
 )
 
 type Product struct {
@@ -22,56 +15,16 @@ func NewProduct(db *bolt.DB) *Product {
 	return &Product{db: db}
 }
 
-func (p *Product) Prepare(name string) error {
-	err := p.db.Update(func(tx *bolt.Tx) error {
-		_, err := tx.CreateBucketIfNotExists([]byte(nameBucket))
-		if err != nil {
-			return err
-		}
-
-		_, err = tx.CreateBucketIfNotExists([]byte(proBucket))
-		if err != nil {
-			return err
-		}
-		return nil
-	})
-	if err != nil {
-		return err
-	}
-
-	err = p.db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(proBucket))
-		bytesId := b.Get([]byte(name))
-		id := decodeId(bytesId)
-		if id > 0 {
-			return errUniq
-		}
-		return nil
-	})
-	if err != nil {
-		return err
-	}
-
-	err = p.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(nameBucket))
-		if err != nil {
-			return err
-		}
-
-		return b.Put([]byte(name), itob(0))
-	})
-
-	return err
-}
-
 func (p *Product) Save(product *model.Product) (int, error) {
 	err := p.db.Update(func(tx *bolt.Tx) error {
-		b, err := tx.CreateBucketIfNotExists([]byte(proBucket))
-		if err != nil {
-			return err
+		nameB := tx.Bucket([]byte(nameBucket))
+		val := nameB.Get([]byte(product.Name))
+		if len(val) != 0 {
+			return errUniq // fix error
 		}
+		prodB := tx.Bucket([]byte(proBucket))
 
-		id, err := b.NextSequence()
+		id, err := prodB.NextSequence()
 		if err != nil {
 			return err
 		}
@@ -83,42 +36,49 @@ func (p *Product) Save(product *model.Product) (int, error) {
 			return err
 		}
 
-		return b.Put(itob(product.Id), buff.Bytes())
-	})
-	if err != nil {
-		return 0, err
-	}
-
-	err = p.db.Update(func(tx *bolt.Tx) error {
-		b, err := tx.CreateBucketIfNotExists([]byte(nameBucket))
+		err = prodB.Put(itob(product.Id), buff.Bytes())
 		if err != nil {
 			return err
 		}
 
-		err = b.Put([]byte(product.Name), itob(product.Id))
-		fmt.Println(err)
-		return err
+		return nameB.Put([]byte(product.Name), itob(product.Id))
 	})
-	if err != nil {
-		return 0, err
-	}
 
 	return product.Id, err
 }
 
-func (p *Product) Commit(name string, id int) error {
-	err := p.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(nameBucket))
-
-		return b.Put([]byte(name), itob(id))
+func (p *Product) Product(id int) (model.Product, error) {
+	var product model.Product
+	err := p.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(proBucket))
+		val := b.Get(itob(id))
+		var err error
+		product, err = decodeProd(val)
+		return err
 	})
-	return err
+	return product, err
 }
 
-// what if name product is duplicate
 func (p *Product) Edit(product *model.Product) error {
 	err := p.db.Update(func(tx *bolt.Tx) error {
-		b, err := tx.CreateBucketIfNotExists([]byte(proBucket))
+		prodB := tx.Bucket([]byte(proBucket))
+
+		buf := prodB.Get(itob(product.Id))
+		prod, err := decodeProd(buf)
+		if err != nil {
+			return err
+		}
+
+		nameB := tx.Bucket([]byte(nameBucket))
+		buf = nameB.Get([]byte(prod.Name))
+		if !bytes.Equal(buf, itob(product.Id)) {
+			return errId
+		}
+		err = prodB.Delete(itob(product.Id))
+		if err != nil {
+			return err
+		}
+		err = nameB.Delete([]byte(prod.Name))
 		if err != nil {
 			return err
 		}
@@ -127,39 +87,75 @@ func (p *Product) Edit(product *model.Product) error {
 		if err != nil {
 			return err
 		}
-
-		return b.Put(itob(product.Id), buff.Bytes())
-	})
-	return err
-}
-
-// check for wronID
-func (p *Product) Delete(id int) error {
-	err := p.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(proBucket))
-
-		err := b.Delete(itob(id))
-
+		err = prodB.Put(itob(product.Id), buff.Bytes())
+		if err != nil {
+			return err
+		}
+		err = nameB.Put([]byte(product.Name), itob(product.Id))
 		return err
 	})
 	return err
 }
 
+func (p *Product) Delete(id int) error {
+	err := p.db.Update(func(tx *bolt.Tx) error {
+		prodB := tx.Bucket([]byte(proBucket))
+		val := prodB.Get(itob(id))
+
+		if len(val) == 0 {
+			return errId
+		}
+
+		prod, err := decodeProd(val)
+		if err != nil {
+			return err
+		}
+
+		err = prodB.Delete(itob(id))
+		if err != nil {
+			return err
+		}
+		nameB := tx.Bucket([]byte(nameBucket))
+		return nameB.Delete([]byte(prod.Name))
+	})
+	return err
+}
+
+// Done
 func (p *Product) Products() ([]model.Product, error) {
 	products := make([]model.Product, 0, 10)
-	m := map[string]int{}
 	err := p.db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(nameBucket))
-		b.ForEach(func(k, v []byte) error {
-			key := decodeKey(k)
-			val := decodeId(v)
-			fmt.Println(key, val)
-			m[key] = val
-			// products = append(products, product)
+		b := tx.Bucket([]byte(proBucket))
+		err := b.ForEach(func(k, v []byte) error {
+			product, err := decodeProd(v)
+			if err != nil {
+				return err
+			}
+			products = append(products, product)
 			return nil
 		})
-		return nil
+		return err
 	})
-	fmt.Println(m)
 	return products, err
+}
+
+func (p *Product) Find(name string) (model.Product, error) {
+	var product model.Product
+	err := p.db.View(func(tx *bolt.Tx) error {
+		nameB := tx.Bucket([]byte(nameBucket))
+		id := nameB.Get([]byte(name))
+
+		if len(id) == 0 {
+			return errName
+		}
+
+		prodB := tx.Bucket([]byte(proBucket))
+		prod := prodB.Get(id)
+
+		var err error
+		product, err = decodeProd(prod)
+
+		return err
+	})
+	return product, err
 }

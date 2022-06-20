@@ -16,7 +16,14 @@ func (h *Handler) Find(c *gin.Context) {
 		})
 		return
 	}
-	var product model.Product
+	product, err := h.service.ToFind(body.SearchName)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status": "failure",
+			"error":  err.Error(),
+		})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"product": product,
