@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Main</title>
+</head>
+
+<body>
+    <a href="http://localhost:8383/product/add">New product</a>
+    <br>
+
+    <form id="form">
+        <input type="text" name="searchName">
+        <input value="Find" type="submit">
+    </form>
+    <div id="list"></div>
+
+    <h3>Products</h3>
+    <table>
+        {{ range . }}
+        <tr>
+            <th>{{ .Name }}</th>
+            <th>{{ .Price }}</th>
+            <th><input type="button" onclick="location.href='product/edit/{{ .Id }}';" value="Edit" /></th>
+            <th><button id="{{ .Id }}" onclick="onClick(this.id)">Delete</button></th>
+        </tr>
+        {{ end }}
+    </table>
+
+    <script>
+        async function Send(e) {
+            e.preventDefault();
+            const formData = new FormData(document.querySelector('form'))
+            var obj = {}
+            for (var data of formData.entries()) {
+                if (data[0] === "price") {
+                    data[1] = Number(data[1])
+                }
+                obj[data[0]] = data[1]
+            }
+            let response = await fetch('http://localhost:8383/q/product-search-by-name', {
+                method: 'POST',
+                body: JSON.stringify(obj)
+            })
+
+            if (response.ok) {
+                let result = await response.json()
+                document.getElementById("list").innerHTML = `<table>
+                <tr><th>`+ result.product.name + `</th>
+                <th>`+ result.product.price + `</th>
+                <th><input type="button" onclick="location.href='product/edit/` + result.product.id + `';" value="Edit"/></th>
+                <th><button id="`+ result.product.id + `" onclick="onClick(this.id)">Delete</button></th></tr></table>`
+            } else {
+                let result = await response.json()
+                alert(result.error)
+            }
+        }
+
+        form.onsubmit = Send;
+        async function onClick(btn) {
+            var obj = { id: Number(btn) }
+            let response = await fetch('http://localhost:8383/cmd/delete-product', {
+                method: 'DELETE',
+                body: JSON.stringify(obj)
+            });
+            if (response.ok) {
+                location.reload()
+            } else {
+                let result = await response.json();
+                alert(result.error)
+            }
+        }
+    </script>
+
+</body>
+</html>

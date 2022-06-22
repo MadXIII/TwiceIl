@@ -18,7 +18,7 @@ func (h *Handler) Find(c *gin.Context) {
 	}
 	product, err := h.service.ToFind(body.SearchName)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+		c.JSON(http.StatusBadRequest, gin.H{
 			"status": "failure",
 			"error":  err.Error(),
 		})

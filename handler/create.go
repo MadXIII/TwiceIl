@@ -9,7 +9,7 @@ import (
 )
 
 func (h *Handler) ParseCreate(c *gin.Context) {
-	temp, err := template.ParseFiles("client/add.html")
+	temp, err := template.ParseFiles("client/create.html")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status": "failure",
@@ -24,9 +24,6 @@ func (h *Handler) ParseCreate(c *gin.Context) {
 		})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"status": "success",
-	})
 }
 
 func (h *Handler) Create(c *gin.Context) {

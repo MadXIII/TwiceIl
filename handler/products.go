@@ -8,12 +8,13 @@ import (
 )
 
 func (h *Handler) Products(c *gin.Context) {
-	temp, err := template.ParseFiles("client/home.html")
+	temp, err := template.ParseFiles("client/main.html")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status": "failure",
 			"error":  err.Error(),
 		})
+
 		return
 	}
 
@@ -33,8 +34,4 @@ func (h *Handler) Products(c *gin.Context) {
 		})
 		return
 	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"product": products,
-	})
 }

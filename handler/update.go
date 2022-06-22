@@ -36,10 +36,6 @@ func (h *Handler) ParseUpdate(c *gin.Context) {
 		})
 		return
 	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"status": "success",
-	})
 }
 
 func (h *Handler) Update(c *gin.Context) {

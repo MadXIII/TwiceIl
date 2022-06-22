@@ -20,7 +20,7 @@ func (p *Product) Save(product *model.Product) (int, error) {
 		nameB := tx.Bucket([]byte(nameBucket))
 		val := nameB.Get([]byte(product.Name))
 		if len(val) != 0 {
-			return errUniq // fix error
+			return errUniq
 		}
 		prodB := tx.Bucket([]byte(proBucket))
 
@@ -121,7 +121,6 @@ func (p *Product) Delete(id int) error {
 	return err
 }
 
-// Done
 func (p *Product) Products() ([]model.Product, error) {
 	products := make([]model.Product, 0, 10)
 	err := p.db.View(func(tx *bolt.Tx) error {
@@ -136,6 +135,7 @@ func (p *Product) Products() ([]model.Product, error) {
 		})
 		return err
 	})
+
 	return products, err
 }
 

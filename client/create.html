@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create</title>
+</head>
+
+
+<body>
+    <h3>Create Product</h3>
+    <form id="form">
+        <input type="text" name="name"><br>
+        <input type="text" name="price"><br>
+        <input type="button" onclick="location.href='/products';" value="Back" />
+        <input type="submit" value="Submit">
+    </form>
+</body>
+
+<script>
+    async function Send(e) {
+        e.preventDefault();
+        const formData = new FormData(document.querySelector('form'))
+        var obj = {}
+        for (var data of formData.entries()) {
+            if (data[0] === "price"){
+                data[1] = Number(data[1])
+            }
+            obj[data[0]] = data[1]
+        }
+        let response = await fetch('http://localhost:8383/cmd/add-product', {
+            method: 'POST',
+            body: JSON.stringify(obj)
+        });
+
+        if (response.ok) {
+            let result = await response.json();
+            location.replace("http://localhost:8383/products")
+        } else {
+            let result = await response.json();
+            alert(result.error)
+        }
+    }
+    form.onsubmit = Send;
+</script>
+
+</html>

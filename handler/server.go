@@ -18,6 +18,6 @@ func (s *Server) Run(address string, handlers http.Handler) error {
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
 	}
-	fmt.Println("Should fix logger", address)
+	fmt.Println("Servier is listening", address)
 	return s.server.ListenAndServe()
 }

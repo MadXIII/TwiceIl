@@ -82,6 +82,5 @@ func (c *Check) ToFind(name string) (model.Product, error) {
 
 func (c *Check) ToProducts() ([]model.Product, int, error) {
 	products, err := c.repo.Products()
-
 	return products, http.StatusInternalServerError, err
 }
